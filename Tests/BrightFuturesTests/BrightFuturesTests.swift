@@ -379,7 +379,7 @@ extension BrightFuturesTests {
     func testSkippedRecover() {
         let e = self.expectation()
         
-        DispatchQueue.global().asyncValue { _ in
+        DispatchQueue.global().asyncValue {
             3
         }.recover { _ in
             XCTFail("recover task should not be executed")
@@ -411,7 +411,7 @@ extension BrightFuturesTests {
         DispatchQueue.global().asyncResult {
             Result(error: NSError(domain: "NaN", code: 0, userInfo: nil))
         }.recoverWith { _ in
-            return DispatchQueue.global().asyncValue { _ in
+            return DispatchQueue.global().asyncValue {
                 fibonacci(5)
             }
         }.onSuccess { value in
@@ -450,7 +450,9 @@ extension BrightFuturesTests {
         
         let e = self.expectation()
         
-        f.zip(f1).onSuccess { (a, b) in
+        f.zip(f1).onSuccess { (arg) in
+            
+            let (a, b) = arg
             XCTAssertEqual(a, 1)
             XCTAssertEqual(b, 2)
             e.fulfill()
@@ -645,24 +647,24 @@ extension BrightFuturesTests {
         
         self.waitForExpectations(timeout: 2, handler: nil)
     }
-	
-	func testFlatMapByPassingFunction() {
-		let e = self.expectation()
-		
-		func toString(_ n: Int) -> Future<String, NoError> {
-			return Future<String, NoError>(value: "\(n)")
-		}
-		
-		let n = 1
-		let flatMapped = Future<Int, NoError>(value: n).flatMap(toString)
-		
-		flatMapped.onSuccess { s in
-			XCTAssertEqual(s, "\(n)", "strings are not equal")
-			e.fulfill()
-		}
-		
-		self.waitForExpectations(timeout: 2, handler: nil)
-	}
+    
+    func testFlatMapByPassingFunction() {
+        let e = self.expectation()
+        
+        func toString(_ n: Int) -> Future<String, NoError> {
+            return Future<String, NoError>(value: "\(n)")
+        }
+        
+        let n = 1
+        let flatMapped = Future<Int, NoError>(value: n).flatMap(toString)
+        
+        flatMapped.onSuccess { s in
+            XCTAssertEqual(s, "\(n)", "strings are not equal")
+            e.fulfill()
+        }
+        
+        self.waitForExpectations(timeout: 2, handler: nil)
+    }
     
     func testFlatMapResult() {
         let e = self.expectation()
@@ -742,7 +744,7 @@ extension BrightFuturesTests {
         let e = self.expectation()
         
         let evenFuture: (Int) -> Future<Bool, NSError> = { i in
-            return DispatchQueue.global().asyncResult { err in
+            return DispatchQueue.global().asyncResult {
                 if i % 2 == 0 {
                     return Result(value: true)
                 } else {
@@ -1082,7 +1084,7 @@ extension BrightFuturesTests {
             }
         }
         
-        p.success()
+        p.success(())
         
         self.waitForExpectations(timeout: 5, handler: nil)
     }
@@ -1137,14 +1139,14 @@ extension XCTestCase {
     }
     
     func failingFuture<U>() -> Future<U, NSError> {
-        return DispatchQueue.global().asyncResult { error in
+        return DispatchQueue.global().asyncResult {
             usleep(arc4random_uniform(100))
             return Result(error: NSError(domain: "failedFuture", code: 0, userInfo: nil))
         }
     }
     
     func succeedingFuture<U>(_ val: U) -> Future<U, NSError> {
-        return DispatchQueue.global().asyncResult { _ in
+        return DispatchQueue.global().asyncResult {
             usleep(arc4random_uniform(100))
             return Result(value: val)
         }
